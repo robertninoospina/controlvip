@@ -1,0 +1,142 @@
+body {
+  font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;
+  background-color: #f8f9fa;
+  color: #212529;
+  margin: 0;
+  padding: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 16px;
+  text-align: left;
+  table-layout: auto;
+}
+
+table th,
+table td {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+}
+
+table th {
+  background-color: #f4c753;
+  color: #333;
+}
+
+table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+table tr:hover {
+  background-color: #f1f1f1;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  max-width: 300px; /* Reduce a la mitad */
+  margin: 0 auto;
+}
+
+form label {
+  display: flex;
+  flex-direction: column;
+}
+
+form input,
+form textarea,
+form button {
+  width: 100%;
+  padding: 5px; /* Reduce el padding a la mitad */
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+form button {
+  background-color: #f4c753;
+  color: #333;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+form button:hover {
+  background-color: #e0b94b;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #f4c753;
+  color: #333;
+}
+
+.header img {
+  height: 40px;
+}
+
+.header h2 {
+  margin: 0;
+  text-shadow: 2px 2px 4px #f4c753;
+}
+
+.header button {
+  background-color: #333;
+  color: #f4c753;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.header button:hover {
+  background-color: #555;
+}
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+  }
+
+  table,
+  th,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  table th {
+    text-align: right;
+  }
+
+  table th::after {
+    content: ": ";
+  }
+
+  table td {
+    text-align: left;
+    padding-left: 50%;
+  }
+
+  table tr {
+    margin-bottom: 10px;
+  }
+
+  table thead {
+    display: none;
+  }
+}

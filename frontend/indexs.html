@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Control VIP - Gestión de Suscripciones</title>
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Asegúrate de tener un archivo CSS para estilizar tu formulario -->
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;700;800"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
+    <script>
+      let editMode = false;
+      let editId = null;
+
+      async function fetchSubscriptions() {
+        const response = await fetch("http://localhost:3000/api/subscriptions");
+        const data = await response.json();
+        displaySubscriptions(data);
+      }
+
+      function formatDate(dateString) {
+        const options = { year: "numeric", month: "2-digit", day: "2-digit" };
+        return new Date(dateString).toLocaleDateString("es-ES", options);
+      }
+
+      function calculateDaysLeft(endDate) {
+        const currentDate = new Date();
+        const end = new Date(endDate);
+        const timeDiff = end - currentDate;
+        const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        return daysLeft;
+      }
+
+      function displaySubscriptions(subscriptions) {
+        const tableBody = document.getElementById("subscriptions-table-body");
+        tableBody.innerHTML = "";
+        subscriptions.forEach((sub) => {
+          const daysLeft = calculateDaysLeft(sub.end_date);
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${sub.usuario_tracker}</td>
+                    <td>${sub.usuario_discord}</td>
+                    <td>${sub.email}</td>
+                    <td>${sub.valor_pagado}</td>
+                    <td>${sub.descripcion}</td>
+                    <td>${formatDate(sub.start_date)}</td>
+                    <td>${formatDate(sub.end_date)}</td>
+                    <td>${daysLeft}</td>
+                    <td>
+                        <button onclick="editSubscription(${
+                          sub.id
+                        })">Modificar</button>
+                        <button onclick="deleteSubscription(${
+                          sub.id
+                        })">Eliminar</button>
+                    </td>
+                `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      async function addSubscription(event) {
+        event.preventDefault();
+        const usuario_tracker =
+          document.getElementById("usuario_tracker").value;
+        const usuario_discord =
+          document.getElementById("usuario_discord").value;
+        const email = document.getElementById("email").value;
+        const valor_pagado = document.getElementById("valor_pagado").value;
+        const descripcion = document.getElementById("descripcion").value;
+        const startDate = document.getElementById("start_date").value;
+        const endDate = document.getElementById("end_date").value;
+
+        const url = editMode
+          ? `http://localhost:3000/api/subscriptions/${editId}`
+          : "http://localhost:3000/api/subscriptions";
+        const method = editMode ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            usuario_tracker: usuario_tracker,
+            usuario_discord: usuario_discord,
+            email: email,
+            valor_pagado: valor_pagado,
+            descripcion: descripcion,
+            start_date: startDate,
+            end_date: endDate,
+          }),
+        });
+
+        if (response.ok) {
+          fetchSubscriptions();
+          document.getElementById("subscription-form").reset();
+          editMode = false;
+          editId = null;
+          document.getElementById("form-title").innerText =
+            "Agregar Suscripción";
+        } else {
+          alert("Error al agregar la suscripción");
+        }
+      }
+
+      async function editSubscription(id) {
+        const response = await fetch(
+          `http://localhost:3000/api/subscriptions/${id}`
+        );
+        const sub = await response.json();
+
+        document.getElementById("usuario_tracker").value = sub.usuario_tracker;
+        document.getElementById("usuario_discord").value = sub.usuario_discord;
+        document.getElementById("email").value = sub.email;
+        document.getElementById("valor_pagado").value = sub.valor_pagado;
+        document.getElementById("descripcion").value = sub.descripcion;
+        document.getElementById("start_date").value =
+          sub.start_date.split("T")[0];
+        document.getElementById("end_date").value = sub.end_date.split("T")[0];
+
+        editMode = true;
+        editId = id;
+        document.getElementById("form-title").innerText = "Editar Suscripción";
+      }
+
+      async function deleteSubscription(id) {
+        const response = await fetch(
+          `http://localhost:3000/api/subscriptions/${id}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (response.ok) {
+          fetchSubscriptions();
+        } else {
+          alert("Error al eliminar la suscripción");
+        }
+      }
+
+      function searchSubscription() {
+        const searchTerm = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+        const rows = document.querySelectorAll("#subscriptions-table-body tr");
+        rows.forEach((row) => {
+          const usuario_tracker = row.cells[0].textContent.toLowerCase();
+          if (usuario_tracker.includes(searchTerm)) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      }
+
+      function exportTableToExcel() {
+        const table = document.getElementById("subscriptions-table");
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+        XLSX.writeFile(wb, "Suscripciones.xlsx");
+      }
+
+      function logout() {
+        localStorage.removeItem("auth"); // Eliminar el estado de autenticación
+        window.location.href = "login.html"; // Redirigir a la página de inicio de sesión
+      }
+
+      window.onload = function () {
+        const auth = localStorage.getItem("auth");
+        if (!auth) {
+          window.location.href = "login.html"; // Redirigir a la página de inicio de sesión si no está autenticado
+        } else {
+          fetchSubscriptions(); // Cargar suscripciones si está autenticado
+        }
+      };
+    </script>
+    <style>
+      body.dark {
+        background-color: #1a202c;
+        color: #cbd5e0;
+      }
+      body.dark .bg-light {
+        background-color: #2d3748;
+      }
+      body.dark .bg-lighter {
+        background-color: #4a5568;
+      }
+      body.dark .text-dark {
+        color: #cbd5e0;
+      }
+      body.dark .text-darker {
+        color: #a0aec0;
+      }
+      body.dark .border-light {
+        border-color: #4a5568;
+      }
+      body.dark .border-lighter {
+        border-color: #2d3748;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: column; /* Alinear elementos en columna */
+        align-items: center; /* Centrar horizontalmente */
+        background-color: #f4c753; /* Color de la barra superior */
+        padding: 10px; /* Espaciado interno de la barra superior */
+      }
+
+      .header img {
+        height: 50px; /* Altura del logo ajustada */
+        width: auto; /* Ancho automático para mantener proporciones */
+      }
+
+      .header h2 {
+        margin: 10px 0 0 0; /* Margen superior para el título */
+        text-shadow: 2px 2px 4px #f4c753;
+        font-weight: bold;
+        font-size: 1.5rem;
+      }
+
+      .header .logout-button {
+        position: absolute; /* Posiciona el botón en la esquina superior derecha */
+        top: 10px;
+        right: 10px;
+        padding: 10px 20px;
+        border-radius: 4px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      .layout-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin-top: 20px;
+      }
+
+      .layout-content-container {
+        width: 100%;
+        max-width: 960px;
+      }
+
+      .input {
+        width: 100%; /* Ajuste para que todos los campos de entrada tengan el mismo ancho */
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        background-color: #f2f2f2;
+        color: #333;
+        margin-bottom: 10px; /* Espaciado inferior entre los campos de entrada */
+      }
+
+      .button {
+        padding: 10px 20px;
+        border-radius: 4px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-top: 10px; /* Espaciado superior entre el botón y los campos de entrada */
+      }
+
+      .centered-form {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <img src="https://lat-team.com/img/ltsmall.png" alt="Logo" />
+      <h2 class="text-dark">Portal de Gestión Lat-Team</h2>
+      <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
+    </header>
+
+    <div class="layout-container">
+      <div class="layout-content-container centered-form">
+        <!-- Formulario para agregar suscripción -->
+        <div class="bg-light rounded-lg p-6">
+          <h2 id="form-title" class="text-dark font-bold text-lg mb-4">
+            Agregar Suscripción
+          </h2>
+          <form id="subscription-form" onsubmit="addSubscription(event)">
+            <input
+              id="usuario_tracker"
+              type="text"
+              required
+              placeholder="Usuario Tracker"
+              class="input"
+            />
+            <input
+              id="usuario_discord"
+              type="text"
+              required
+              placeholder="Usuario de Discord"
+              class="input"
+            />
+            <input
+              id="email"
+              type="email"
+              required
+              placeholder="Correo Electrónico"
+              class="input"
+            />
+            <input
+              id="valor_pagado"
+              type="number"
+              required
+              placeholder="Valor Pagado"
+              class="input"
+            />
+            <input
+              id="descripcion"
+              type="text"
+              required
+              placeholder="Descripción"
+              class="input"
+            />
+            <input
+              id="start_date"
+              type="date"
+              required
+              placeholder="Fecha de Inicio"
+              class="input"
+            />
+            <input
+              id="end_date"
+              type="date"
+              required
+              placeholder="Fecha de Finalización"
+              class="input"
+            />
+            <button type="submit" class="button">Guardar</button>
+          </form>
+        </div>
+
+        <!-- Tabla de suscripciones -->
+        <div class="bg-lighter rounded-lg mt-8 p-6">
+          <h2 class="text-dark font-bold text-lg mb-4">
+            Lista de Suscripciones
+          </h2>
+          <div class="overflow-auto">
+            <table
+              id="subscriptions-table"
+              class="w-full divide-y divide-light border-light"
+            >
+              <thead class="bg-lighter">
+                <tr class="text-darker">
+                  <th class="px-6 py-3 text-left">Usuario Tracker</th>
+                  <th class="px-6 py-3 text-left">Usuario Discord</th>
+                  <th class="px-6 py-3 text-left">Correo Electrónico</th>
+                  <th class="px-6 py-3 text-left">Valor Pagado</th>
+                  <th class="px-6 py-3 text-left">Descripción</th>
+                  <th class="px-6 py-3 text-left">Fecha de Inicio</th>
+                  <th class="px-6 py-3 text-left">Fecha de Finalización</th>
+                  <th class="px-6 py-3 text-left">Días Restantes</th>
+                  <th class="px-6 py-3 text-left">Acciones</th>
+                </tr>
+              </thead>
+              <tbody
+                id="subscriptions-table-body"
+                class="divide-y divide-lighter"
+              >
+                <!-- Aquí se mostrarán las filas de suscripciones -->
+              </tbody>
+            </table>
+          </div>
+          <div class="flex justify-end mt-4">
+            <button onclick="exportTableToExcel()" class="button">
+              Exportar a Excel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  </body>
+</html>

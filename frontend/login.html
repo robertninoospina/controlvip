@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body {
+        background-color: #1a202c;
+        color: #cbd5e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;
+      }
+      .login-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #2d3748;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+      .login-container img {
+        height: 80px;
+        margin-bottom: 20px;
+      }
+      .login-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .login-form input {
+        margin-bottom: 10px;
+        padding: 10px;
+        width: 200px;
+        border: 1px solid #4a5568;
+        border-radius: 4px;
+        background-color: #2d3748;
+        color: #cbd5e0;
+      }
+      .login-form button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+      }
+      .login-form button:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <img src="https://lat-team.com/img/ltsmall.png" alt="Logo" />
+      <h2>Iniciar Sesión</h2>
+      <form id="login-form" class="login-form" onsubmit="login(event)">
+        <input type="text" id="username" required placeholder="Usuario" />
+        <input
+          type="password"
+          id="password"
+          required
+          placeholder="Contraseña"
+        />
+        <button type="submit">Ingresar</button>
+      </form>
+    </div>
+
+    <script>
+      function login(event) {
+        event.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        // Aquí deberías realizar la validación de usuario y contraseña en el servidor
+        // Ejemplo básico de validación
+        if (username === "admin" && password === "password") {
+          localStorage.setItem("auth", "true"); // Guardar estado de autenticación
+          window.location.href = "index.html"; // Redirigir a la página principal
+        } else {
+          alert("Credenciales incorrectas");
+        }
+      }
+    </script>
+  </body>
+</html>
